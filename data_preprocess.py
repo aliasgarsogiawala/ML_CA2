@@ -1,6 +1,6 @@
 # ---------------------------------------------
 # DATA CLEANING AND TRANSFORMATION
-# Pre-Flight Mental State Survey
+# Pre-Flight Mental State Survey (FINAL FIXED)
 # ---------------------------------------------
 
 import pandas as pd
@@ -20,13 +20,11 @@ print("\nInitial Dataset Info:")
 data.info()
 
 # ---------------------------------------------
-# Step 2: Clean Column Names (IMPORTANT)
+# Step 2: Clean Column Names
 # ---------------------------------------------
 
-# Remove leading/trailing spaces from column names
 data.columns = data.columns.str.strip()
 
-# Rename columns to ML-friendly names
 data.rename(columns={
     '1. Age Group': 'Age_Group',
     '2. Do you have any interest or exposure to aviation topics?': 'Aviation_Exposure',
@@ -49,11 +47,39 @@ data.rename(columns={
     '19-. In your opinion, what helps a pilot stay focused? (Optional short answer)': 'Focus_Support_Factors'
 }, inplace=True)
 
-print("\nColumns after renaming:")
-print(data.columns)
+# ---------------------------------------------
+# Step 3: MAP LIKERT SCALES (CRITICAL FIX)
+# ---------------------------------------------
+
+confidence_map = {
+    'Very uncomfortable': 1,
+    'Uncomfortable': 2,
+    'Neutral': 3,
+    'Comfortable': 4,
+    'Very comfortable': 5
+}
+
+importance_map = {
+    'Not Important': 1,
+    'Low': 2,
+    'Moderate': 3,
+    'High': 4,
+    'Very Important': 5
+}
+
+data['Decision_Confidence'] = data['Decision_Confidence'].map(confidence_map)
+data['In_Flight_Confidence'] = data['In_Flight_Confidence'].map({
+    'Very Low': 1,
+    'Low': 2,
+    'Moderate': 3,
+    'High': 4,
+    'Very High': 5
+})
+
+data['Peer_Support_Importance'] = data['Peer_Support_Importance'].map(importance_map)
 
 # ---------------------------------------------
-# Step 3: Handle Missing Values
+# Step 4: Handle Missing Values
 # ---------------------------------------------
 
 ordinal_columns = [
@@ -90,7 +116,7 @@ for col in categorical_columns:
 data['Focus_Support_Factors'] = data['Focus_Support_Factors'].fillna("Not Specified")
 
 # ---------------------------------------------
-# Step 4: Encode Categorical Variables
+# Step 5: Encode Categorical Variables
 # ---------------------------------------------
 
 encoder = LabelEncoder()
@@ -98,24 +124,24 @@ for col in categorical_columns:
     data[col] = encoder.fit_transform(data[col])
 
 # ---------------------------------------------
-# Step 5: Normalize Ordinal Features
+# Step 6: Normalize Ordinal Features
 # ---------------------------------------------
 
 scaler = MinMaxScaler()
 data[ordinal_columns] = scaler.fit_transform(data[ordinal_columns])
 
 # ---------------------------------------------
-# Step 6: Final Validation
+# Step 7: Final Validation
 # ---------------------------------------------
 
 print("\nCleaned Dataset Preview:")
 print(data.head())
 
-print("\nCleaned Dataset Info:")
-data.info()
+print("\nValue Counts (Decision Confidence):")
+print(data['Decision_Confidence'].value_counts())
 
 # ---------------------------------------------
-# Step 7: Save Cleaned Dataset
+# Step 8: Save Cleaned Dataset
 # ---------------------------------------------
 
 data.to_csv("cleaned_preflight_mental_state_data.csv", index=False)
