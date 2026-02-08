@@ -1,7 +1,7 @@
 # -------------------------------------------------
 # PRELIMINARY ANALYSIS
 # Pre-Flight Mental State & Decision Confidence
-# FINAL STABLE VERSION
+# FINAL VERIFIED VERSION
 # -------------------------------------------------
 
 import pandas as pd
@@ -20,10 +20,10 @@ print("\nDataset Info:")
 data.info()
 
 # -------------------------------------------------
-# Step 2: Numeric Columns
+# Step 2: Define Ordinal Numeric Columns
 # -------------------------------------------------
 
-numeric_columns = [
+ordinal_columns = [
     'Decision_Confidence',
     'Mental_Workload',
     'Sleep_Quality',
@@ -39,26 +39,24 @@ numeric_columns = [
 # -------------------------------------------------
 
 print("\nBasic Statistical Summary:")
-print(data[numeric_columns].describe())
+print(data[ordinal_columns].describe())
 
 # -------------------------------------------------
 # Step 4: Detailed Statistical Measures
 # -------------------------------------------------
 
 stats_table = pd.DataFrame({
-    'Mean': data[numeric_columns].mean(),
-    'Median': data[numeric_columns].median(),
-    'Mode': data[numeric_columns].mode().iloc[0],
-    'Minimum': data[numeric_columns].min(),
-    'Maximum': data[numeric_columns].max(),
-    'Range': data[numeric_columns].max() - data[numeric_columns].min(),
-    'Variance': data[numeric_columns].var(),
-    'Standard Deviation': data[numeric_columns].std(),
-    'Skewness': data[numeric_columns].apply(lambda x: skew(x.dropna())),
-    'Kurtosis': data[numeric_columns].apply(lambda x: kurtosis(x.dropna())),
-    'Coefficient of Variation': (
-        data[numeric_columns].std() / data[numeric_columns].mean()
-    )
+    'Mean': data[ordinal_columns].mean(),
+    'Median': data[ordinal_columns].median(),
+    'Mode': data[ordinal_columns].mode().iloc[0],
+    'Minimum': data[ordinal_columns].min(),
+    'Maximum': data[ordinal_columns].max(),
+    'Range': data[ordinal_columns].max() - data[ordinal_columns].min(),
+    'Variance': data[ordinal_columns].var(),
+    'Standard Deviation': data[ordinal_columns].std(),
+    'Skewness': data[ordinal_columns].apply(lambda x: skew(x.dropna())),
+    'Kurtosis': data[ordinal_columns].apply(lambda x: kurtosis(x.dropna())),
+    'Coefficient of Variation': data[ordinal_columns].std() / data[ordinal_columns].mean()
 })
 
 print("\nDetailed Statistical Measures:")
@@ -69,26 +67,23 @@ print(stats_table)
 # -------------------------------------------------
 
 print("\nQuartiles:")
-print(data[numeric_columns].quantile([0.25, 0.5, 0.75]))
+print(data[ordinal_columns].quantile([0.25, 0.5, 0.75]))
 
 print("\nDeciles:")
-print(data[numeric_columns].quantile(np.arange(0.1, 1.0, 0.1)))
+print(data[ordinal_columns].quantile(np.arange(0.1, 1.0, 0.1)))
 
 # -------------------------------------------------
-# Step 6: Visualizations (SAFE MATPLOTLIB ONLY)
+# Step 6: SAFE BAR PLOT FUNCTION (ORDINAL DATA)
 # -------------------------------------------------
 
 def safe_bar_plot(series, title, xlabel):
-    counts = (
-        series
-        .dropna()
-        .round(2)
-        .value_counts()
-        .sort_index()
-    )
+    counts = series.dropna().round(2).value_counts().sort_index()
+
+    print(f"\nValue Counts – {title}")
+    print(counts)
 
     if counts.empty:
-        print(f"Skipping plot: {title} (no data)")
+        print("⚠️ Skipping plot (no data)")
         return
 
     plt.figure(figsize=(8,5))
@@ -99,12 +94,22 @@ def safe_bar_plot(series, title, xlabel):
     plt.grid(axis='y')
     plt.show()
 
-# Bar plots for Likert-scale data
+# -------------------------------------------------
+# Step 7: Ordinal Variable Plots
+# -------------------------------------------------
+
 safe_bar_plot(data['Decision_Confidence'], "Decision Confidence Under Pressure", "Confidence Level")
 safe_bar_plot(data['Mental_Workload'], "Mental Workload Before Takeoff", "Workload Level")
+safe_bar_plot(data['Sleep_Quality'], "Sleep Quality Before Flight", "Sleep Quality Level")
 safe_bar_plot(data['In_Flight_Focus'], "In-Flight Focus Level", "Focus Level")
+safe_bar_plot(data['Communication_Load'], "Communication Load During Flight", "Load Level")
+safe_bar_plot(data['In_Flight_Confidence'], "In-Flight Decision Confidence", "Confidence Level")
+safe_bar_plot(data['Peer_Support_Importance'], "Importance of Peer Support", "Importance Level")
 
-# Box plot – Emotional Distraction
+# -------------------------------------------------
+# Step 8: Box Plot – Emotional Distraction
+# -------------------------------------------------
+
 plt.figure(figsize=(6,5))
 sns.boxplot(y=data['Emotional_Distraction'])
 plt.title("Emotional Distraction Before Flight")
@@ -112,7 +117,10 @@ plt.ylabel("Distraction Level")
 plt.grid(axis='y')
 plt.show()
 
-# Count plot – Task Difficulty
+# -------------------------------------------------
+# Step 9: Categorical Variable Plots
+# -------------------------------------------------
+
 plt.figure(figsize=(7,5))
 sns.countplot(x=data['Task_Difficulty'])
 plt.title("Task Difficulty During Flight")
@@ -121,7 +129,6 @@ plt.ylabel("Count")
 plt.grid(axis='y')
 plt.show()
 
-# Pie chart – Aviation Exposure
 plt.figure(figsize=(6,6))
 data['Aviation_Exposure'].value_counts().plot(
     kind='pie',
@@ -132,7 +139,6 @@ plt.title("Aviation Exposure Distribution")
 plt.ylabel("")
 plt.show()
 
-# Pie chart – Mental State Impact
 plt.figure(figsize=(6,6))
 data['Mental_State_Impact'].value_counts().plot(
     kind='pie',
@@ -144,11 +150,11 @@ plt.ylabel("")
 plt.show()
 
 # -------------------------------------------------
-# Step 7: Correlation Heatmap
+# Step 10: Correlation Heatmap (ORDINAL ONLY)
 # -------------------------------------------------
 
 plt.figure(figsize=(12,8))
-corr = data[numeric_columns].corr()
+corr = data[ordinal_columns].corr()
 sns.heatmap(corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=0.5)
-plt.title("Correlation Heatmap of Mental State & Decision Variables")
+plt.title("Correlation Heatmap of Pre-Flight Mental State & Decision Variables")
 plt.show()

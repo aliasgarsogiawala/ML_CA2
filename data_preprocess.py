@@ -1,6 +1,7 @@
 # ---------------------------------------------
 # DATA CLEANING AND TRANSFORMATION
-# Pre-Flight Mental State Survey (FINAL FIXED)
+# Pre-Flight Mental State Survey
+# FINAL LOCKED VERSION
 # ---------------------------------------------
 
 import pandas as pd
@@ -20,7 +21,7 @@ print("\nInitial Dataset Info:")
 data.info()
 
 # ---------------------------------------------
-# Step 2: Clean Column Names
+# Step 2: Clean & Rename Columns
 # ---------------------------------------------
 
 data.columns = data.columns.str.strip()
@@ -48,35 +49,30 @@ data.rename(columns={
 }, inplace=True)
 
 # ---------------------------------------------
-# Step 3: MAP LIKERT SCALES (CRITICAL FIX)
+# Step 3: Robust Likert Scale Extraction (CRITICAL)
 # ---------------------------------------------
 
-confidence_map = {
-    'Very uncomfortable': 1,
-    'Uncomfortable': 2,
-    'Neutral': 3,
-    'Comfortable': 4,
-    'Very comfortable': 5
-}
+def extract_likert_value(x):
+    """
+    Extracts numeric Likert value (1–5) from mixed text such as:
+    '1', '3', '5 (Very High)', 'Very Important', etc.
+    """
+    if pd.isna(x):
+        return np.nan
+    x = str(x)
+    for i in range(1, 6):
+        if str(i) in x:
+            return i
+    return np.nan
 
-importance_map = {
-    'Not Important': 1,
-    'Low': 2,
-    'Moderate': 3,
-    'High': 4,
-    'Very Important': 5
-}
+likert_columns = [
+    'Decision_Confidence',
+    'In_Flight_Confidence',
+    'Peer_Support_Importance'
+]
 
-data['Decision_Confidence'] = data['Decision_Confidence'].map(confidence_map)
-data['In_Flight_Confidence'] = data['In_Flight_Confidence'].map({
-    'Very Low': 1,
-    'Low': 2,
-    'Moderate': 3,
-    'High': 4,
-    'Very High': 5
-})
-
-data['Peer_Support_Importance'] = data['Peer_Support_Importance'].map(importance_map)
+for col in likert_columns:
+    data[col] = data[col].apply(extract_likert_value)
 
 # ---------------------------------------------
 # Step 4: Handle Missing Values
@@ -131,18 +127,23 @@ scaler = MinMaxScaler()
 data[ordinal_columns] = scaler.fit_transform(data[ordinal_columns])
 
 # ---------------------------------------------
-# Step 7: Final Validation
+# Step 7: Final Validation (MANDATORY CHECK)
 # ---------------------------------------------
+
+print("\nValue Counts Check:")
+print("Decision Confidence:\n", data['Decision_Confidence'].value_counts())
+print("In-Flight Confidence:\n", data['In_Flight_Confidence'].value_counts())
+print("Peer Support Importance:\n", data['Peer_Support_Importance'].value_counts())
 
 print("\nCleaned Dataset Preview:")
 print(data.head())
 
-print("\nValue Counts (Decision Confidence):")
-print(data['Decision_Confidence'].value_counts())
+print("\nCleaned Dataset Info:")
+data.info()
 
 # ---------------------------------------------
 # Step 8: Save Cleaned Dataset
 # ---------------------------------------------
 
 data.to_csv("cleaned_preflight_mental_state_data.csv", index=False)
-print("\nCleaned dataset saved successfully.")
+print("\n✅ Cleaned dataset saved successfully.")
